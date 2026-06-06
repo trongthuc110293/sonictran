@@ -592,7 +592,7 @@ function showImportStatus(type, msg) {
 function handleFile(file) {
   showImportStatus('info', '⏳ Đang đọc file...');
   const reader = new FileReader();
-  reader.onload = e => {
+  reader.onload = async e => {
     try {
       const wb = XLSX.read(e.target.result, { type: 'array', cellDates: false });
       const sheet = wb.Sheets[wb.SheetNames[0]];
