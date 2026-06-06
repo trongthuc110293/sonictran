@@ -285,6 +285,86 @@ tr.row-overdue { background:rgba(239,68,68,.035); }
   .summary-grid{grid-template-columns:repeat(2,1fr);}
   .header{flex-direction:column;gap:12px;}
 }
+
+/* ===== MOBILE ===== */
+@media(max-width:640px){
+  .container { padding: 14px 12px 40px; }
+
+  /* Header */
+  .brand-title { font-size: 15px; }
+  .header { margin-bottom: 16px; padding-bottom: 14px; }
+
+  /* Summary grid: 2 cols */
+  .summary-grid { grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 14px; }
+  .stat-card { padding: 12px 14px; }
+  .stat-value { font-size: 16px; }
+
+  /* Progress */
+  .collect-progress { padding: 12px 14px; margin-bottom: 14px; }
+
+  /* Import */
+  .import-section { padding: 14px 14px; margin-bottom: 16px; }
+  .drop-zone { padding: 18px 12px; }
+  .drop-icon { font-size: 24px; margin-bottom: 6px; }
+  .drop-text { font-size: 12px; }
+  .drop-sub, .drop-hint { font-size: 10px; }
+
+  /* Filter bar */
+  .filter-bar { gap: 6px; margin-bottom: 12px; }
+  .btn-filter { padding: 5px 10px; font-size: 11px; }
+
+  /* Hide table — dùng card layout trên mobile */
+  #mainTable thead { display: none; }
+  #mainTable tbody tr {
+    display: block;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  #mainTable tbody td {
+    display: block;
+    padding: 2px 0;
+    text-align: left !important;
+    border: none;
+    font-size: 12px;
+  }
+  /* Ẩn cột ít quan trọng trên mobile */
+  #mainTable td:nth-child(6),   /* Tiền gốc */
+  #mainTable td:nth-child(7) {  /* Tổng cộng */
+    display: none;
+  }
+  /* Tên KH nổi bật */
+  #mainTable td:nth-child(2) .cust-name { font-size: 13px; }
+
+  /* Layout card: tên + toggle + ngày + số tiền */
+  #mainTable td:nth-child(10) { /* Đã thu toggle */
+    position: absolute;
+    top: 14px; right: 14px;
+  }
+  #mainTable td:nth-child(4) { /* Còn lại */
+    display: inline-block;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  #mainTable td:nth-child(8) { /* Trạng thái */
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+  /* Footer */
+  .footer-summary { flex-direction: column; gap: 10px; align-items: flex-end; padding: 12px 14px; }
+
+  /* Refresh bar */
+  .refresh-bar { flex-wrap: wrap; gap: 4px; font-size: 11px; padding: 10px 12px; }
+  .refresh-bar span[style] { display: none; } /* ẩn separators */
+
+  /* Modal */
+  .modal-box { padding: 20px 18px; }
+
+  /* Period tabs */
+  .period-tabs { gap: 6px; }
+  .period-tab { font-size: 11px; padding: 5px 10px; }
+}
 </style>
 </head>
 <body>
