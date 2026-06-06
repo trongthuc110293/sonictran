@@ -160,16 +160,98 @@ body::before {
 .table-header-row { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); }
 .table-title { font-size:13px; font-weight:700; }
 .record-count { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); }
-table { width:100%; border-collapse:collapse; }
-thead th { padding:10px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); background:var(--surface2); border-bottom:1px solid var(--border); white-space:nowrap; }
-thead th.r { text-align:right; }
-thead th.c { text-align:center; }
-tbody tr { border-bottom:1px solid rgba(34,39,51,0.5); transition:background 0.12s; }
-tbody tr:last-child { border-bottom:none; }
-tbody tr:hover { background:rgba(212,168,67,0.035); }
-tbody td { padding:12px 14px; font-size:12px; color:var(--text-mid); vertical-align:middle; }
-tbody td.r { text-align:right; }
-tbody td.c { text-align:center; }
+/* DESKTOP ROW LAYOUT */
+.desk-thead {
+  display: flex; align-items: center;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.dcol {
+  font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--text-dim);
+  overflow: hidden;
+}
+.stt-col   { width: 36px; flex-shrink: 0; }
+.name-col  { flex: 1; min-width: 0; }
+.date-col  { width: 96px; flex-shrink: 0; text-align: center; }
+.days-col  { width: 90px; flex-shrink: 0; text-align: center; }
+.amt-col   { width: 130px; flex-shrink: 0; text-align: right; }
+.status-col{ width: 110px; flex-shrink: 0; text-align: center; }
+.note-col  { width: 130px; flex-shrink: 0; text-align: center; }
+.toggle-col{ width: 64px; flex-shrink: 0; text-align: center; }
+
+/* DESKTOP DATA ROW */
+.drow {
+  display: flex; align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(34,39,51,0.5);
+  transition: background 0.12s;
+}
+.drow:last-child { border-bottom: none; }
+.drow:hover { background: rgba(212,168,67,0.035); }
+.drow.row-overdue { background: rgba(239,68,68,0.04); }
+.drow.is-paid { opacity: .42; }
+.drow.is-paid .cust-name { text-decoration: line-through; }
+.drow .stt-col, .drow .name-col, .drow .date-col,
+.drow .days-col, .drow .amt-col, .drow .status-col,
+.drow .note-col, .drow .toggle-col { align-self: center; }
+.drow .amt-col { font-family:'JetBrains Mono',monospace; font-size:12px; }
+
+/* MOBILE CARD */
+@media(max-width:640px){
+  .container { padding: 12px 10px 40px; }
+  .brand-title { font-size: 15px; }
+  .header { margin-bottom: 14px; }
+  .summary-grid { grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 12px; }
+  .stat-card { padding: 11px 12px; }
+  .stat-value { font-size: 15px; }
+  .stat-label { font-size: 9px; }
+  .collect-progress { padding: 12px 12px; margin-bottom: 12px; }
+  .import-section { padding: 12px; margin-bottom: 14px; }
+  .drop-zone { padding: 16px 10px; }
+  .drop-icon { font-size: 22px; margin-bottom: 4px; }
+  .drop-text { font-size: 12px; }
+  .drop-sub, .drop-hint { font-size: 10px; }
+  .filter-bar { gap: 5px; margin-bottom: 10px; }
+  .btn-filter { padding: 4px 9px; font-size: 11px; }
+
+  /* Ẩn desktop header */
+  .desk-thead { display: none; }
+
+  /* Card layout */
+  .drow {
+    display: block !important;
+    padding: 12px 14px;
+    position: relative;
+  }
+  /* Toggle góc phải */
+  .drow .toggle-col {
+    position: absolute; top: 14px; right: 12px;
+    width: auto;
+  }
+  /* Ẩn cột ít dùng */
+  .drow .amt-col:nth-child(6),  /* tiền gốc */
+  .drow .amt-col:nth-child(7),  /* tổng cộng */
+  .drow .note-col { display: none; }
+
+  /* STT nhỏ */
+  .drow .stt-col { display: inline; font-size: 10px; color: var(--text-dim); margin-right: 4px; }
+  /* Tên */
+  .drow .name-col { display: block; margin-bottom: 6px; padding-right: 50px; }
+  /* Ngày + Còn lại inline */
+  .drow .date-col { display: inline-block; margin-right: 10px; text-align: left; width: auto; font-size: 12px; }
+  .drow .days-col { display: inline-block; margin-right: 10px; text-align: left; width: auto; }
+  /* Tiền lãi */
+  .drow .amt-col:nth-child(5) { display: block; margin-top: 5px; text-align: left; font-size: 13px; color: var(--gold); font-weight: 700; }
+  /* Trạng thái */
+  .drow .status-col { display: inline-block; margin-top: 5px; width: auto; text-align: left; }
+
+  .footer-summary { flex-direction: column; gap: 8px; align-items: flex-end; padding: 12px 14px; }
+  .fi-val { font-size: 13px; }
+  .refresh-bar { font-size: 11px; flex-wrap: wrap; gap: 4px; padding: 8px 12px; justify-content: center; }
+  .modal-box { padding: 18px 16px; width: 94vw; }
+}
 
 .stt { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); font-weight:600; }
 .cust-name { font-weight:700; color:var(--text); font-size:13px; line-height:1.35; }
@@ -285,86 +367,6 @@ tr.row-overdue { background:rgba(239,68,68,.035); }
   .summary-grid{grid-template-columns:repeat(2,1fr);}
   .header{flex-direction:column;gap:12px;}
 }
-
-/* ===== MOBILE ===== */
-@media(max-width:640px){
-  .container { padding: 14px 12px 40px; }
-
-  /* Header */
-  .brand-title { font-size: 15px; }
-  .header { margin-bottom: 16px; padding-bottom: 14px; }
-
-  /* Summary grid: 2 cols */
-  .summary-grid { grid-template-columns: repeat(2,1fr); gap: 8px; margin-bottom: 14px; }
-  .stat-card { padding: 12px 14px; }
-  .stat-value { font-size: 16px; }
-
-  /* Progress */
-  .collect-progress { padding: 12px 14px; margin-bottom: 14px; }
-
-  /* Import */
-  .import-section { padding: 14px 14px; margin-bottom: 16px; }
-  .drop-zone { padding: 18px 12px; }
-  .drop-icon { font-size: 24px; margin-bottom: 6px; }
-  .drop-text { font-size: 12px; }
-  .drop-sub, .drop-hint { font-size: 10px; }
-
-  /* Filter bar */
-  .filter-bar { gap: 6px; margin-bottom: 12px; }
-  .btn-filter { padding: 5px 10px; font-size: 11px; }
-
-  /* Hide table — dùng card layout trên mobile */
-  #mainTable thead { display: none; }
-  #mainTable tbody tr {
-    display: block;
-    padding: 12px 14px;
-    border-bottom: 1px solid var(--border);
-    position: relative;
-  }
-  #mainTable tbody td {
-    display: block;
-    padding: 2px 0;
-    text-align: left !important;
-    border: none;
-    font-size: 12px;
-  }
-  /* Ẩn cột ít quan trọng trên mobile */
-  #mainTable td:nth-child(6),   /* Tiền gốc */
-  #mainTable td:nth-child(7) {  /* Tổng cộng */
-    display: none;
-  }
-  /* Tên KH nổi bật */
-  #mainTable td:nth-child(2) .cust-name { font-size: 13px; }
-
-  /* Layout card: tên + toggle + ngày + số tiền */
-  #mainTable td:nth-child(10) { /* Đã thu toggle */
-    position: absolute;
-    top: 14px; right: 14px;
-  }
-  #mainTable td:nth-child(4) { /* Còn lại */
-    display: inline-block;
-    margin-right: 8px;
-    vertical-align: middle;
-  }
-  #mainTable td:nth-child(8) { /* Trạng thái */
-    display: inline-block;
-    vertical-align: middle;
-  }
-
-  /* Footer */
-  .footer-summary { flex-direction: column; gap: 10px; align-items: flex-end; padding: 12px 14px; }
-
-  /* Refresh bar */
-  .refresh-bar { flex-wrap: wrap; gap: 4px; font-size: 11px; padding: 10px 12px; }
-  .refresh-bar span[style] { display: none; } /* ẩn separators */
-
-  /* Modal */
-  .modal-box { padding: 20px 18px; }
-
-  /* Period tabs */
-  .period-tabs { gap: 6px; }
-  .period-tab { font-size: 11px; padding: 5px 10px; }
-}
 </style>
 </head>
 <body>
@@ -462,31 +464,28 @@ tr.row-overdue { background:rgba(239,68,68,.035); }
   <button class="btn-filter" onclick="setFilter('unpaid',this)">🔲 Chưa thu</button>
 </div>
 
-<!-- TABLE -->
+<!-- LIST -->
 <div class="table-wrap">
   <div class="table-header-row">
     <div class="table-title">📋 Danh Sách Khoản Thu Lãi</div>
     <div class="record-count" id="recordCount">—</div>
   </div>
-  <table id="mainTable">
-    <thead>
-      <tr>
-        <th>STT</th>
-        <th>Tên Khách Hàng</th>
-        <th class="c">Ngày Dự Thu</th>
-        <th class="c">Còn Lại</th>
-        <th class="r">Tiền Lãi</th>
-        <th class="r">Tiền Gốc</th>
-        <th class="r">Tổng Cộng</th>
-        <th class="c">Trạng Thái</th>
-        <th class="c">Ghi Chú</th>
-        <th class="c">Đã Thu ✔</th>
-      </tr>
-    </thead>
-    <tbody id="tableBody">
-      <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Chưa có dữ liệu</div><div class="empty-sub">Import file Excel để bắt đầu</div></div></td></tr>
-    </tbody>
-  </table>
+  <!-- Desktop thead -->
+  <div class="desk-thead">
+    <div class="dcol stt-col">STT</div>
+    <div class="dcol name-col">Tên Khách Hàng</div>
+    <div class="dcol date-col">Ngày Dự Thu</div>
+    <div class="dcol days-col">Còn Lại</div>
+    <div class="dcol amt-col">Tiền Lãi</div>
+    <div class="dcol amt-col">Tiền Gốc</div>
+    <div class="dcol amt-col">Tổng Cộng</div>
+    <div class="dcol status-col">Trạng Thái</div>
+    <div class="dcol note-col">Ghi Chú</div>
+    <div class="dcol toggle-col">Đã Thu ✔</div>
+  </div>
+  <div id="tableBody">
+    <div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Chưa có dữ liệu</div><div class="empty-sub">Import file Excel để bắt đầu</div></div>
+  </div>
   <div class="footer-summary">
     <div class="fi"><div class="fi-label">Tổng Lãi (hiển thị)</div><div class="fi-val" id="footerLai">—</div></div>
     <div class="fi"><div class="fi-label">Tổng Gốc</div><div class="fi-val" id="footerGoc">—</div></div>
@@ -897,7 +896,7 @@ function render() {
     ['totalLai','cntOverdue','cntWarn','cntPaid','cntUnpaid'].forEach(id => document.getElementById(id).textContent = '—');
     document.getElementById('progressPct').textContent = '0%';
     document.getElementById('progressBar').style.width = '0%';
-    document.getElementById('tableBody').innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Chưa có dữ liệu</div><div class="empty-sub">Import file Excel để bắt đầu</div></div></td></tr>`;
+    document.getElementById('tableBody').innerHTML = `<div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Chưa có dữ liệu</div><div class="empty-sub">Import file Excel để bắt đầu</div></div>`;
     ['footerLai','footerGoc','footerTotal'].forEach(id => document.getElementById(id).textContent = '—');
     return;
   }
@@ -958,14 +957,13 @@ function render() {
   let sumLai = 0, sumGoc = 0, sumTong = 0;
 
   if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Không có kết quả</div><div class="empty-sub">Thử bộ lọc khác</div></div></td></tr>`;
+    tbody.innerHTML = `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Không có kết quả</div><div class="empty-sub">Thử bộ lọc khác</div></div>`;
   } else {
     tbody.innerHTML = filtered.map(r => {
       const status = getStatus(r, pid);
       const d = daysLeft(r.ngay);
       const isPaid = status === 'paid';
       const pInfo = pm[r.stt] || {};
-      const note = pInfo.note || '';
       const paidDate = pInfo.paidDate || '';
 
       sumLai += r.lai; sumGoc += r.goc; sumTong += r.tong;
@@ -985,38 +983,36 @@ function render() {
       else if (d <= 7) badgeHtml = `<span class="badge badge-warning"><span class="badge-dot"></span>Sắp đến hạn</span>`;
       else badgeHtml = `<span class="badge badge-upcoming"><span class="badge-dot"></span>Chưa đến hạn</span>`;
 
-      // Note area — dùng autoNote đã lưu từ modal (so ngày đóng thực tế vs dự thu)
+      // Note
       let noteHtml = '';
       if (isPaid) {
         const storedNote = pInfo.note || '';
-        const isLate = storedNote.startsWith('Trễ');
-        const isEarly = storedNote.startsWith('Sớm');
-        if (isLate) noteHtml += `<span class="note-tag note-late">${storedNote}</span>`;
+        if (storedNote.startsWith('Trễ')) noteHtml += `<span class="note-tag note-late">${storedNote}</span>`;
         else noteHtml += `<span class="note-tag note-ontime">${storedNote || 'Đúng hạn'}</span>`;
         if (paidDate) noteHtml += `<br><span style="font-size:10px;color:var(--text-dim)">Đóng: ${paidDate}</span>`;
       } else {
         noteHtml += `<span class="note-tag note-pending">Chưa thu</span>`;
       }
-      noteHtml += `<br><input class="note-input" placeholder="Ghi chú thêm..." value="${(isPaid ? '' : note).replace(/"/g,'&quot;')}" onchange="updateNote(${r.stt},'${pid}',this.value)" onclick="event.stopPropagation()" />`;
+      noteHtml += `<br><input class="note-input" placeholder="Ghi chú..." value="${(pInfo.note||'').replace(/"/g,'&quot;')}" onchange="updateNote(${r.stt},'${pid}',this.value)" onclick="event.stopPropagation()" />`;
 
       const dateObj = parseDue(r.ngay);
       const dateFmt = dateObj ? dateObj.toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
       let dateColor = isPaid ? 'var(--text-dim)' : (d < 0 ? 'var(--red)' : d <= 7 ? 'var(--yellow)' : 'var(--text-mid)');
 
-      return `<tr class="${isPaid ? 'is-paid' : ''} ${d < 0 && !isPaid ? 'row-overdue' : ''}" data-stt="${r.stt}">
-        <td><span class="stt">${r.stt}</span></td>
-        <td><div class="cust-name">${r.ten}</div><div class="cust-type">${r.loai}</div></td>
-        <td class="c"><span class="date-cell" style="color:${dateColor}">${dateFmt}</span></td>
-        <td class="c">${daysHtml}</td>
-        <td class="r"><span class="amt">${fmt(r.lai)}</span></td>
-        <td class="r"><span class="amt-goc">${r.goc > 0 ? fmt(r.goc) : '—'}</span></td>
-        <td class="r"><span class="amt-total">${fmt(r.tong)}</span></td>
-        <td class="c">${badgeHtml}</td>
-        <td class="c" style="min-width:130px">${noteHtml}</td>
-        <td class="c">
-          <div class="paid-toggle ${isPaid ? 'on' : ''}" onclick="togglePaid(${r.stt},'${pid}')" title="${isPaid ? 'Bỏ đánh dấu' : 'Đánh dấu đã thu'}"></div>
-        </td>
-      </tr>`;
+      return `<div class="drow ${isPaid?'is-paid':''} ${d<0&&!isPaid?'row-overdue':''}" data-stt="${r.stt}">
+        <div class="dcol stt-col"><span class="stt">${r.stt}</span></div>
+        <div class="dcol name-col"><div class="cust-name">${r.ten}</div><div class="cust-type">${r.loai}</div></div>
+        <div class="dcol date-col"><span class="date-cell" style="color:${dateColor}">${dateFmt}</span></div>
+        <div class="dcol days-col">${daysHtml}</div>
+        <div class="dcol amt-col"><span class="amt">${fmt(r.lai)}</span></div>
+        <div class="dcol amt-col"><span class="amt-goc">${r.goc>0?fmt(r.goc):'—'}</span></div>
+        <div class="dcol amt-col"><span class="amt-total">${fmt(r.tong)}</span></div>
+        <div class="dcol status-col">${badgeHtml}</div>
+        <div class="dcol note-col">${noteHtml}</div>
+        <div class="dcol toggle-col">
+          <div class="paid-toggle ${isPaid?'on':''}" onclick="togglePaid(${r.stt},'${pid}')" title="${isPaid?'Bỏ đánh dấu':'Đánh dấu đã thu'}"></div>
+        </div>
+      </div>`;
     }).join('');
   }
 
