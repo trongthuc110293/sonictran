@@ -1,3 +1,118 @@
+Conversation title
+Image attachment
+
+index
+
+HTML
+Image attachment
+tôi có file sau tôi đã quăng lên gifhub và connect với nestify. nhưng phần hiển thị ngày dự thu của web bị lệch so với file excel import vào
+Today
+Nhìn ảnh thì thấy lệch đúng 1 ngày luôn: Excel 03/06/26 → web ra 02/06/2026. Tương tự 12/06/26 → 11/06/2026.
+
+Đây là lỗi kinh điển khi đọc ngày từ Excel bằng JavaScript: lệch timezone UTC vs local.
+
+1. Nguyên nhân
+Trong file index.html bạn gửi, đoạn này gây lệch:
+
+JavaScript
+if (typeof v === 'number') {
+  // Excel serial date — cộng thêm offset timezone để tránh lệch ngày
+  const ms = Math.round((v - 25569) * 86400 * 1000);
+  const d = new Date(ms);
+  // Dùng local time + bù timezone để lấy đúng ngày local
+  const localMs = ms + d.getTimezoneOffset() * 60000; // <- chỗ này sai
+  const local = new Date(localMs);
+  return new Date(local.getFullYear(), local.getMonth(), local.getDate());
+}
+
+4 lines hidden
+Excel lưu ngày dạng serial, khi convert sang Date thì JS mặc định hiểu là UTC 00:00. Bạn đang ở GMT+7 nên getTimezoneOffset() = -420 phút. Cộng thêm d.getTimezoneOffset() * 60000 lại làm lùi về 1 ngày.
+
+VD: Excel 03/06/2026 = serial 45816 → new Date(ms) = 2026-06-03T00:00:00.000Z
+Ở VN sẽ thành 2026-06-03T07:00:00 local. Nhưng bạn cộng thêm offset -420 phút nữa → 2026-06-02T00:00:00 local. Toang.
+
+2. Cách fix
+Chỉ cần bỏ đoạn bù timezone đi. Excel serial đã đúng ngày rồi, chỉ cần lấy local date là xong.
+
+Thay đoạn parseDue bằng bản này:
+
+JavaScript
+function parseDue(v) {
+  if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+  
+  if (typeof v === 'number') {
+    // Excel serial date: số ngày từ 1899-12-30
+    const utc_days = Math.floor(v - 25569);
+    const utc_value = utc_days * 86400; 
+    const date_info = new Date(utc_value * 1000);
+    
+    // Lấy đúng ngày/tháng/năm theo UTC rồi tạo lại Date local
+    const year = date_info.getUTCFullYear();
+    const month = date_info.getUTCMonth(); 
+    const day = date_info.getUTCDate();
+    return new Date(year, month, day);
+  }
+  
+  const s = String(v).trim();
+  // Try dd/mm/yy or dd/mm/yyyy
+  let m;
+  if ((m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2})$/))) return new Date(2000 + +m[3], +m[2]-1, +m[1]);
+  if ((m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/))) return new Date(+m[3], +m[2]-1, +m[1]);
+  if ((m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/))) return new Date(+m[1], +m[2]-1, +m[3]);
+  return new Date(s);
+}
+
+19 lines hidden
+Bản ngắn gọn hơn nếu bạn thích:
+
+JavaScript
+if (typeof v === 'number') {
+  const date = new Date(Math.round((v - 25569) * 86400 * 1000));
+  return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+}
+Key là dùng getUTCDate() để lấy đúng ngày từ Excel, rồi tạo lại Date local với đúng ngày đó.
+
+3. Test nhanh
+Sau khi sửa, push lên GitHub lại. Netlify auto deploy xong thì import lại file Excel. 03/06/26 sẽ ra đúng 03/06/2026.
+
+Bonus: Nếu cột Excel đang để dạng Text 03/06/26 thì regex dd/mm/yy của bạn đã đúng rồi. Chỉ có dạng Number serial mới bị lệch.
+
+Bạn sửa file index.html rồi commit lên Github là được. Cần mình xuất lại file đã fix sẵn không?
+
+có
+Today
+Xong rồi đây. Mình đã fix lỗi lệch timezone cho bạn.
+
+File đã sửa:
+
+
+Thay đổi chính
+Mình chỉ sửa đúng hàm parseDue từ dòng 612-619:
+
+Trước - bị lệch 1 ngày:
+
+JavaScript
+const ms = Math.round((v - 25569) * 86400 * 1000);
+const d = new Date(ms);
+const localMs = ms + d.getTimezoneOffset() * 60000; // dòng này gây lỗi
+const local = new Date(localMs);
+return new Date(local.getFullYear(), local.getMonth(), local.getDate());
+Sau - đã fix:
+
+JavaScript
+const date = new Date(Math.round((v - 25569) * 86400 * 1000));
+return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+Cách deploy
+Tải file index_fixed.html về, đổi tên thành index.html
+Push lên GitHub repo của bạn để Netlify deploy lại
+Xóa cache trình duyệt rồi import lại file Excel
+Giờ 03/06/26 trong Excel sẽ hiển thị đúng 03/06/2026 trên web.
+
+Test thử nếu vẫn lệch thì nhắn mình check tiếp nhé.
+
+
+
+Ask Meta AI...
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -610,13 +725,9 @@ function parseDue(v) {
   if (!v) return null;
   if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
   if (typeof v === 'number') {
-    // Excel serial date — cộng thêm offset timezone để tránh lệch ngày
-    const ms = Math.round((v - 25569) * 86400 * 1000);
-    const d = new Date(ms);
-    // Dùng local time + bù timezone để lấy đúng ngày local
-    const localMs = ms + d.getTimezoneOffset() * 60000;
-    const local = new Date(localMs);
-    return new Date(local.getFullYear(), local.getMonth(), local.getDate());
+    // Excel serial date: fix timezone lệch 1 ngày
+    const date = new Date(Math.round((v - 25569) * 86400 * 1000));
+    return new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
   }
   const s = String(v).trim();
   // Try dd/mm/yy or dd/mm/yyyy
@@ -1098,3 +1209,6 @@ init();
 </script>
 </body>
 </html>
+Command Palette
+Search for a command to run...
+
