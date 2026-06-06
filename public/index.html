@@ -1085,4 +1085,16 @@ async function seedDefaultData() {
 // ============================
 async function init() {
   setupDropZone();
-  render(); // render skeleton nga
+  render(); // render skeleton ngay
+  await loadFromServer(); // load dữ liệu từ server
+  if (allPeriods.length === 0) await seedDefaultData();
+  if (!activePeriodId && allPeriods.length > 0) activePeriodId = allPeriods[0].id;
+  renderPeriodTabs();
+  render();
+  checkNotifications();
+  setInterval(checkNotifications, 3600000);
+}
+init();
+</script>
+</body>
+</html>
