@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TTT INVEST — Quản Lý Thu Lãi</title>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #111318;
+  --surface2: #181c24;
+  --surface3: #1e2230;
+  --border: #222733;
+  --gold: #d4a843;
+  --gold-dim: #9a7830;
+  --gold-glow: rgba(212,168,67,0.12);
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+  --blue: #3b82f6;
+  --purple: #a855f7;
+  --text: #e8eaf0;
+  --text-dim: #6b7280;
+  --text-mid: #9ca3af;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'Be Vietnam Pro', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content:'';
+  position:fixed; inset:0;
+  background-image:
+    linear-gradient(rgba(212,168,67,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(212,168,67,0.025) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none; z-index:0;
+}
+.container { position:relative; z-index:1; max-width:1200px; margin:0 auto; padding:28px 20px 60px; }
+
+/* HEADER */
+.header { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:28px; padding-bottom:22px; border-bottom:1px solid var(--border); }
+.brand { display:flex; align-items:center; gap:14px; }
+.brand-icon { width:46px; height:46px; background:linear-gradient(135deg,var(--gold),var(--gold-dim)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; box-shadow:0 4px 20px var(--gold-glow); }
+.brand-name { font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:var(--gold); opacity:.8; }
+.brand-title { font-size:20px; font-weight:800; }
+.header-right { text-align:right; }
+.current-date { font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--gold); font-weight:600; }
+.period-label { font-size:12px; color:var(--text-dim); margin-top:4px; font-weight:500; }
+
+/* IMPORT ZONE */
+.import-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px 24px;
+  margin-bottom: 24px;
+}
+.import-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.import-title { font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:8px; }
+.import-period-tag { font-family:'JetBrains Mono',monospace; font-size:11px; background:rgba(212,168,67,0.1); color:var(--gold); padding:3px 10px; border-radius:20px; border:1px solid rgba(212,168,67,0.25); }
+
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over { border-color: var(--gold); background: var(--gold-glow); }
+.drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.drop-icon { font-size:32px; margin-bottom:10px; }
+.drop-text { font-size:13px; font-weight:600; color:var(--text-mid); }
+.drop-sub { font-size:11px; color:var(--text-dim); margin-top:6px; }
+.drop-hint { font-size:11px; color:var(--gold); margin-top:8px; opacity:.7; }
+
+.import-status {
+  display:flex; align-items:center; gap:10px;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  margin-top: 12px;
+}
+.import-status.success { background:rgba(34,197,94,0.1); color:#4ade80; border:1px solid rgba(34,197,94,0.2); }
+.import-status.error { background:rgba(239,68,68,0.1); color:#f87171; border:1px solid rgba(239,68,68,0.2); }
+.import-status.info { background:rgba(59,130,246,0.1); color:#60a5fa; border:1px solid rgba(59,130,246,0.2); }
+.hidden { display:none !important; }
+
+/* PERIOD HISTORY */
+.period-tabs {
+  display:flex; gap:8px; margin-bottom:20px; flex-wrap:wrap; align-items:center;
+}
+.period-tab {
+  padding:6px 14px; border-radius:8px; border:1px solid var(--border);
+  background:transparent; color:var(--text-dim); font-family:'Be Vietnam Pro',sans-serif;
+  font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s;
+  display:flex; align-items:center; gap:6px;
+}
+.period-tab:hover { border-color:var(--gold); color:var(--gold); }
+.period-tab.active { background:var(--gold); border-color:var(--gold); color:#000; }
+.period-tab .del-btn {
+  width:14px; height:14px; border-radius:50%; background:rgba(0,0,0,0.2);
+  display:inline-flex; align-items:center; justify-content:center; font-size:10px;
+  cursor:pointer; transition:background 0.1s;
+}
+.period-tab.active .del-btn:hover { background:rgba(0,0,0,0.4); }
+
+/* SUMMARY CARDS */
+.summary-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:24px; }
+.stat-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px 18px; position:relative; overflow:hidden; }
+.stat-card::before { content:''; position:absolute; top:0;left:0;right:0; height:2px; }
+.stat-card.gold::before { background:linear-gradient(90deg,var(--gold),transparent); }
+.stat-card.red-c::before { background:linear-gradient(90deg,var(--red),transparent); }
+.stat-card.yellow-c::before { background:linear-gradient(90deg,var(--yellow),transparent); }
+.stat-card.green-c::before { background:linear-gradient(90deg,var(--green),transparent); }
+.stat-card.blue-c::before { background:linear-gradient(90deg,var(--blue),transparent); }
+.stat-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); margin-bottom:8px; }
+.stat-value { font-family:'JetBrains Mono',monospace; font-size:20px; font-weight:700; }
+.stat-sub { font-size:10px; color:var(--text-dim); margin-top:4px; }
+
+/* PROGRESS BAR */
+.collect-progress {
+  background: var(--surface); border:1px solid var(--border); border-radius:12px;
+  padding:16px 20px; margin-bottom:20px;
+}
+.progress-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.progress-title { font-size:12px; font-weight:700; color:var(--text); letter-spacing:.5px; }
+.progress-pct { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--gold); }
+.progress-bar-bg { height:8px; background:var(--surface2); border-radius:4px; overflow:hidden; }
+.progress-bar-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--green)); border-radius:4px; transition:width 0.5s ease; }
+.progress-sub { display:flex; justify-content:space-between; margin-top:8px; }
+.progress-sub span { font-size:11px; color:var(--text-dim); }
+
+/* ALERT */
+.alert-banner { border-radius:10px; padding:13px 18px; margin-bottom:18px; display:flex; align-items:center; gap:12px; }
+.alert-banner.overdue { background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.3); border-left:3px solid var(--red); animation:pulse-b 2s ease-in-out infinite; }
+.alert-banner.warn { background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.25); border-left:3px solid var(--yellow); }
+@keyframes pulse-b { 0%,100%{border-left-color:var(--red)} 50%{border-left-color:rgba(239,68,68,.3)} }
+.alert-text { font-size:13px; font-weight:700; }
+.alert-sub { font-size:11px; color:var(--text-dim); margin-top:2px; }
+
+/* FILTER BAR */
+.filter-bar { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; align-items:center; }
+.filter-label { font-size:11px; color:var(--text-dim); font-weight:700; letter-spacing:1px; text-transform:uppercase; margin-right:4px; }
+.btn-filter { padding:5px 14px; border-radius:20px; border:1px solid var(--border); background:transparent; color:var(--text-mid); font-family:'Be Vietnam Pro',sans-serif; font-size:12px; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.btn-filter:hover { border-color:var(--gold); color:var(--gold); }
+.btn-filter.active { background:var(--gold); border-color:var(--gold); color:#000; }
+
+/* TABLE */
+.table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:14px; overflow:hidden; }
+.table-header-row { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid var(--border); }
+.table-title { font-size:13px; font-weight:700; }
+.record-count { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); }
+table { width:100%; border-collapse:collapse; }
+thead th { padding:10px 14px; text-align:left; font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-dim); background:var(--surface2); border-bottom:1px solid var(--border); white-space:nowrap; }
+thead th.r { text-align:right; }
+thead th.c { text-align:center; }
+tbody tr { border-bottom:1px solid rgba(34,39,51,0.5); transition:background 0.12s; }
+tbody tr:last-child { border-bottom:none; }
+tbody tr:hover { background:rgba(212,168,67,0.035); }
+tbody td { padding:12px 14px; font-size:12px; color:var(--text-mid); vertical-align:middle; }
+tbody td.r { text-align:right; }
+tbody td.c { text-align:center; }
+
+.stt { font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--text-dim); font-weight:600; }
+.cust-name { font-weight:700; color:var(--text); font-size:13px; line-height:1.35; }
+.cust-type { font-size:10px; color:var(--text-dim); font-weight:500; margin-top:2px; }
+.date-cell { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; }
+.amt { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:600; color:var(--gold); }
+.amt-goc { font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--text-dim); }
+.amt-total { font-family:'JetBrains Mono',monospace; font-size:12px; font-weight:700; color:var(--text); }
+
+/* BADGE */
+.badge { display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:20px; font-size:10px; font-weight:700; letter-spacing:.5px; text-transform:uppercase; white-space:nowrap; }
+.badge-overdue { background:rgba(239,68,68,.14); color:#f87171; border:1px solid rgba(239,68,68,.3); }
+.badge-warning { background:rgba(245,158,11,.14); color:#fbbf24; border:1px solid rgba(245,158,11,.3); animation:blink 1.5s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+.badge-upcoming { background:rgba(59,130,246,.1); color:#60a5fa; border:1px solid rgba(59,130,246,.22); }
+.badge-paid { background:rgba(34,197,94,.1); color:#4ade80; border:1px solid rgba(34,197,94,.22); }
+.badge-dot { width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+/* DAYS CHIP */
+.days-chip { font-family:'JetBrains Mono',monospace; font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; }
+.d-neg { background:rgba(239,68,68,.14); color:#f87171; }
+.d-today { background:rgba(245,158,11,.2); color:#fbbf24; }
+.d-warn { background:rgba(245,158,11,.12); color:#fbbf24; }
+.d-ok { background:rgba(34,197,94,.1); color:#86efac; }
+.d-far { background:rgba(107,114,128,.12); color:var(--text-dim); }
+
+/* PAID TOGGLE */
+.paid-toggle {
+  width:40px; height:22px; background:var(--surface2); border:1px solid var(--border);
+  border-radius:11px; cursor:pointer; position:relative; transition:all 0.2s; flex-shrink:0;
+  display:inline-block;
+}
+.paid-toggle::after {
+  content:''; position:absolute; width:16px; height:16px; background:var(--text-dim);
+  border-radius:50%; top:2px; left:2px; transition:all 0.2s;
+}
+.paid-toggle.on { background:rgba(34,197,94,.25); border-color:var(--green); }
+.paid-toggle.on::after { background:var(--green); left:20px; }
+tr.is-paid { opacity:.4; }
+tr.is-paid .cust-name { text-decoration:line-through; }
+
+/* NOTE TAG */
+.note-tag { font-size:10px; padding:2px 7px; border-radius:4px; font-weight:700; display:inline-block; }
+.note-late { background:rgba(239,68,68,.1); color:#f87171; }
+.note-ontime { background:rgba(34,197,94,.1); color:#4ade80; }
+.note-pending { background:rgba(107,114,128,.1); color:var(--text-dim); }
+
+/* NOTE INPUT */
+.note-input {
+  background: transparent; border:none; border-bottom:1px dashed var(--border);
+  color:var(--text-mid); font-family:'Be Vietnam Pro',sans-serif; font-size:11px;
+  width:110px; padding:2px 4px; margin-top:4px; outline:none;
+  transition: border-color 0.15s;
+}
+.note-input:focus { border-bottom-color:var(--gold); color:var(--text); }
+.note-input::placeholder { color:var(--text-dim); }
+
+/* FOOTER */
+.footer-summary { display:flex; justify-content:flex-end; align-items:center; gap:28px; padding:16px 20px; background:var(--surface2); border-top:1px solid var(--border); }
+.fi { text-align:right; }
+.fi-label { font-size:10px; color:var(--text-dim); font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+.fi-val { font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700; color:var(--gold); margin-top:3px; }
+
+/* REFRESH */
+.refresh-bar { display:flex; align-items:center; justify-content:center; gap:8px; margin-top:24px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:10px; font-size:12px; color:var(--text-dim); }
+.refresh-dot { width:8px;height:8px; border-radius:50%; background:var(--green); animation:pdot 2s ease-in-out infinite; }
+@keyframes pdot { 0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,197,94,.4)} 50%{opacity:.6;box-shadow:0 0 0 5px rgba(34,197,94,0)} }
+
+/* MODAL */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:999;
+  display:flex; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+  animation: fadeIn 0.15s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal-box {
+  background:var(--surface); border:1px solid var(--border); border-radius:16px;
+  padding:28px 32px; width:360px; max-width:90vw;
+  box-shadow:0 20px 60px rgba(0,0,0,0.6);
+  animation: slideUp 0.15s ease;
+}
+@keyframes slideUp { from{transform:translateY(12px);opacity:0} to{transform:translateY(0);opacity:1} }
+.modal-title { font-size:15px; font-weight:800; margin-bottom:6px; }
+.modal-sub { font-size:12px; color:var(--text-dim); margin-bottom:20px; line-height:1.5; }
+.modal-label { font-size:11px; font-weight:700; color:var(--text-dim); letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+.modal-date-input {
+  width:100%; padding:10px 14px; background:var(--surface2); border:1px solid var(--border);
+  border-radius:8px; color:var(--text); font-family:'Be Vietnam Pro',sans-serif; font-size:14px;
+  font-weight:600; outline:none; transition:border-color 0.15s;
+}
+.modal-date-input:focus { border-color:var(--gold); }
+.modal-actions { display:flex; gap:10px; margin-top:20px; }
+.btn-modal {
+  flex:1; padding:10px; border-radius:8px; border:none; cursor:pointer;
+  font-family:'Be Vietnam Pro',sans-serif; font-size:13px; font-weight:700; transition:all 0.15s;
+}
+.btn-modal-cancel { background:var(--surface2); color:var(--text-mid); border:1px solid var(--border); }
+.btn-modal-cancel:hover { border-color:var(--border); color:var(--text); }
+.btn-modal-confirm { background:var(--gold); color:#000; }
+.btn-modal-confirm:hover { background:#e6b94a; }
+
+/* EMPTY STATE */
+.empty-state { padding:60px 20px; text-align:center; }
+.empty-icon { font-size:48px; margin-bottom:16px; opacity:.5; }
+.empty-text { font-size:15px; font-weight:700; color:var(--text-mid); }
+.empty-sub { font-size:12px; color:var(--text-dim); margin-top:8px; }
+
+/* ROW HIGHLIGHT */
+tr.row-overdue { background:rgba(239,68,68,.035); }
+
+@media(max-width:900px){
+  .summary-grid{grid-template-columns:repeat(2,1fr);}
+  .header{flex-direction:column;gap:12px;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="brand">
+    <div class="brand-icon">💰</div>
+    <div>
+      <div class="brand-name">TTT INVEST</div>
+      <div class="brand-title">Quản Lý Thu Lãi Khách Hàng</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="current-date" id="currentDate"></div>
+    <div class="period-label">Công Ty Việt Long</div>
+  </div>
+</div>
+
+<!-- IMPORT SECTION -->
+<div class="import-section">
+  <div class="import-header">
+    <div class="import-title">📂 Import File Excel</div>
+    <span class="import-period-tag" id="activePeriodTag">Chưa có dữ liệu</span>
+  </div>
+  <div class="drop-zone" id="dropZone">
+    <input type="file" id="fileInput" accept=".xlsx,.xls" />
+    <div class="drop-icon">📊</div>
+    <div class="drop-text">Kéo thả file Excel vào đây hoặc click để chọn</div>
+    <div class="drop-sub">Hỗ trợ .xlsx, .xls — Cột cần có: STT, Tên khách hàng, Ngày dự thu, Tiền lãi, Tiền gốc (tùy chọn)</div>
+    <div class="drop-hint">💡 Mỗi lần import sẽ tạo một kỳ mới và lưu lại lịch sử</div>
+  </div>
+  <div id="importStatus" class="import-status hidden"></div>
+  <!-- PERIOD TABS -->
+  <div id="periodTabsWrap" style="margin-top:14px;display:none">
+    <div style="font-size:11px;color:var(--text-dim);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Kỳ thu lãi đã lưu:</div>
+    <div class="period-tabs" id="periodTabs"></div>
+  </div>
+</div>
+
+<!-- SUMMARY CARDS -->
+<div class="summary-grid">
+  <div class="stat-card gold">
+    <div class="stat-label">Tổng Lãi Kỳ</div>
+    <div class="stat-value" id="totalLai" style="color:var(--gold)">—</div>
+    <div class="stat-sub" id="totalKH">— khách hàng</div>
+  </div>
+  <div class="stat-card red-c">
+    <div class="stat-label">Quá Hạn</div>
+    <div class="stat-value" id="cntOverdue" style="color:var(--red)">0</div>
+    <div class="stat-sub">khoản cần xử lý ngay</div>
+  </div>
+  <div class="stat-card yellow-c">
+    <div class="stat-label">Sắp Đến Hạn</div>
+    <div class="stat-value" id="cntWarn" style="color:var(--yellow)">0</div>
+    <div class="stat-sub">trong vòng 7 ngày</div>
+  </div>
+  <div class="stat-card green-c">
+    <div class="stat-label">Đã Thu</div>
+    <div class="stat-value" id="cntPaid" style="color:var(--green)">0</div>
+    <div class="stat-sub" id="paidAmt">—</div>
+  </div>
+  <div class="stat-card blue-c">
+    <div class="stat-label">Chưa Thu</div>
+    <div class="stat-value" id="cntUnpaid" style="color:var(--blue)">0</div>
+    <div class="stat-sub" id="unpaidAmt">—</div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div class="collect-progress">
+  <div class="progress-header">
+    <div class="progress-title">📈 Tiến độ thu lãi kỳ này</div>
+    <div class="progress-pct" id="progressPct">0%</div>
+  </div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+  <div class="progress-sub">
+    <span id="progressLeft">Đã thu: 0 khoản</span>
+    <span id="progressRight">Còn lại: 0 khoản</span>
+  </div>
+</div>
+
+<!-- ALERT -->
+<div id="alertBanner" class="hidden"></div>
+
+<!-- FILTER -->
+<div class="filter-bar">
+  <span class="filter-label">Lọc:</span>
+  <button class="btn-filter active" onclick="setFilter('all',this)">Tất cả</button>
+  <button class="btn-filter" onclick="setFilter('overdue',this)">⚠️ Quá hạn</button>
+  <button class="btn-filter" onclick="setFilter('warning',this)">🔔 Sắp đến hạn</button>
+  <button class="btn-filter" onclick="setFilter('upcoming',this)">📅 Còn xa</button>
+  <button class="btn-filter" onclick="setFilter('paid',this)">✅ Đã thu</button>
+  <button class="btn-filter" onclick="setFilter('unpaid',this)">🔲 Chưa thu</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <div class="table-header-row">
+    <div class="table-title">📋 Danh Sách Khoản Thu Lãi</div>
+    <div class="record-count" id="recordCount">—</div>
+  </div>
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th>STT</th>
+        <th>Tên Khách Hàng</th>
+        <th class="c">Ngày Dự Thu</th>
+        <th class="c">Còn Lại</th>
+        <th class="r">Tiền Lãi</th>
+        <th class="r">Tiền Gốc</th>
+        <th class="r">Tổng Cộng</th>
+        <th class="c">Trạng Thái</th>
+        <th class="c">Ghi Chú</th>
+        <th class="c">Đã Thu ✔</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Chưa có dữ liệu</div><div class="empty-sub">Import file Excel để bắt đầu</div></div></td></tr>
+    </tbody>
+  </table>
+  <div class="footer-summary">
+    <div class="fi"><div class="fi-label">Tổng Lãi (hiển thị)</div><div class="fi-val" id="footerLai">—</div></div>
+    <div class="fi"><div class="fi-label">Tổng Gốc</div><div class="fi-val" id="footerGoc">—</div></div>
+    <div class="fi"><div class="fi-label">Tổng Cộng</div><div class="fi-val" id="footerTotal">—</div></div>
+  </div>
+</div>
+
+<div class="refresh-bar">
+  <div class="refresh-dot" id="syncDot"></div>
+  <span id="syncTxt">Đang kết nối...</span>
+  <span style="margin-left:16px;color:var(--border)">|</span>
+  <span style="margin-left:16px">Cập nhật lần cuối: <span id="lastUpdate">—</span></span>
+  <span style="margin-left:16px;color:var(--border)">|</span>
+  <span style="margin-left:16px;color:var(--text-dim);font-size:11px">🔄 Tự đồng bộ mỗi 15 giây</span>
+</div>
+
+</div>
+
+<script>
+// ============================
+// STATE
+// ============================
+let allPeriods = [];
+let activePeriodId = localStorage.getItem('ttt_active') || null;
+let paidMap = {};
+let currentFilter = 'all';
+let _syncing = false;
+
+// ============================
+// API SYNC (Shared storage)
+// ============================
+const API = '/api/data';
+
+async function apiGet(key) {
+  try {
+    const r = await fetch(`${API}?key=${encodeURIComponent(key)}`);
+    const j = await r.json();
+    return j.value ?? null;
+  } catch { return null; }
+}
+
+async function apiSet(key, value) {
+  try {
+    await fetch(API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ key, value })
+    });
+  } catch(e) { console.warn('Sync error:', e); }
+}
+
+async function apiDel(key) {
+  try { await fetch(`${API}?key=${encodeURIComponent(key)}`, { method: 'DELETE' }); }
+  catch(e) { console.warn('Del error:', e); }
+}
+
+async function savePeriods() {
+  localStorage.setItem('ttt_periods_cache', JSON.stringify(allPeriods));
+  await apiSet('periods', allPeriods);
+}
+
+async function savePaid() {
+  localStorage.setItem('ttt_paid_cache', JSON.stringify(paidMap));
+  await apiSet('paid', paidMap);
+}
+
+async function loadFromServer() {
+  showSyncStatus('loading');
+  try {
+    const [periods, paid] = await Promise.all([
+      apiGet('periods'),
+      apiGet('paid'),
+    ]);
+    if (periods && Array.isArray(periods)) allPeriods = periods;
+    else allPeriods = JSON.parse(localStorage.getItem('ttt_periods_cache') || '[]');
+    if (paid && typeof paid === 'object') paidMap = paid;
+    else paidMap = JSON.parse(localStorage.getItem('ttt_paid_cache') || '{}');
+    showSyncStatus('ok');
+  } catch {
+    // Fallback to localStorage cache
+    allPeriods = JSON.parse(localStorage.getItem('ttt_periods_cache') || '[]');
+    paidMap = JSON.parse(localStorage.getItem('ttt_paid_cache') || '{}');
+    showSyncStatus('offline');
+  }
+}
+
+function showSyncStatus(state) {
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncTxt');
+  if (!dot || !txt) return;
+  if (state === 'loading') { dot.style.background = 'var(--yellow)'; txt.textContent = 'Đang đồng bộ...'; }
+  else if (state === 'ok') { dot.style.background = 'var(--green)'; txt.textContent = 'Đồng bộ: ' + new Date().toLocaleTimeString('vi-VN'); }
+  else if (state === 'offline') { dot.style.background = 'var(--red)'; txt.textContent = 'Offline — dùng cache cục bộ'; }
+}
+
+// Poll server mỗi 15s để sync thay đổi từ người khác
+setInterval(async () => {
+  const [periods, paid] = await Promise.all([apiGet('periods'), apiGet('paid')]);
+  let changed = false;
+  if (periods && JSON.stringify(periods) !== JSON.stringify(allPeriods)) { allPeriods = periods; changed = true; }
+  if (paid && JSON.stringify(paid) !== JSON.stringify(paidMap)) { paidMap = paid; changed = true; }
+  if (changed) { showSyncStatus('ok'); renderPeriodTabs(); render(); }
+}, 15000);
+
+// ============================
+// UTILS
+// ============================
+const fmt = n => n > 0 ? new Intl.NumberFormat('vi-VN').format(n) + ' đ' : '—';
+const fmtShort = n => {
+  if (!n || n === 0) return '—';
+  if (n >= 1e9) return (n/1e9).toFixed(2).replace(/\.?0+$/, '') + ' tỷ';
+  if (n >= 1e6) return Math.round(n/1e6) + ' tr';
+  return new Intl.NumberFormat('vi-VN').format(n);
+};
+
+function todayDate() {
+  const d = new Date();
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+function parseDue(v) {
+  if (!v) return null;
+  if (v instanceof Date) return new Date(v.getFullYear(), v.getMonth(), v.getDate());
+  if (typeof v === 'number') {
+    // Excel serial date
+    const d = new Date(Math.round((v - 25569) * 86400 * 1000));
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
+  const s = String(v).trim();
+  // Try dd/mm/yyyy or yyyy-mm-dd
+  let m;
+  if ((m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/))) return new Date(+m[3], +m[2]-1, +m[1]);
+  if ((m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/))) return new Date(+m[1], +m[2]-1, +m[3]);
+  return new Date(s);
+}
+
+function daysLeft(dateStr) {
+  const due = parseDue(dateStr);
+  if (!due || isNaN(due)) return 999;
+  return Math.round((due - todayDate()) / 86400000);
+}
+
+function getStatus(row, pid) {
+  const pm = (paidMap[pid] || {})[row.stt];
+  if (pm && pm.paid) return 'paid';
+  const d = daysLeft(row.ngay);
+  if (d < 0) return 'overdue';
+  if (d <= 7) return 'warning';
+  return 'upcoming';
+}
+
+function getPaid(pid) { return paidMap[pid] || {}; }
+
+// savePaid() và savePeriods() đã định nghĩa ở phần API SYNC phía trên
+
+function activePeriod() { return allPeriods.find(p => p.id === activePeriodId) || null; }
+
+// ============================
+// IMPORT EXCEL
+// ============================
+function setupDropZone() {
+  const dz = document.getElementById('dropZone');
+  const fi = document.getElementById('fileInput');
+
+  fi.addEventListener('change', e => { if (e.target.files[0]) handleFile(e.target.files[0]); });
+
+  dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+  dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+  dz.addEventListener('drop', e => {
+    e.preventDefault(); dz.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+}
+
+function showImportStatus(type, msg) {
+  const el = document.getElementById('importStatus');
+  el.className = `import-status ${type}`;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  if (type === 'success') setTimeout(() => el.classList.add('hidden'), 5000);
+}
+
+function handleFile(file) {
+  showImportStatus('info', '⏳ Đang đọc file...');
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array', cellDates: false });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      const parsed = parseRows(rows, file.name);
+      if (!parsed || parsed.data.length === 0) {
+        showImportStatus('error', '❌ Không đọc được dữ liệu. Kiểm tra lại cột: STT, Tên khách hàng, Ngày dự thu, Tiền lãi');
+        return;
+      }
+      // Save period
+      const existing = allPeriods.findIndex(p => p.label === parsed.label);
+      if (existing >= 0) {
+        allPeriods[existing].data = parsed.data;
+        showImportStatus('success', `✅ Cập nhật kỳ "${parsed.label}" — ${parsed.data.length} khách hàng`);
+      } else {
+        allPeriods.unshift({ id: parsed.id, label: parsed.label, data: parsed.data });
+        showImportStatus('success', `✅ Import thành công kỳ "${parsed.label}" — ${parsed.data.length} khách hàng`);
+      }
+      localStorage.setItem('ttt_active', activePeriodId);
+      await savePeriods();
+      showSyncStatus('ok');
+      renderPeriodTabs();
+      render();
+    } catch(err) {
+      showImportStatus('error', '❌ Lỗi đọc file: ' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function parseRows(rows, filename) {
+  // Find header row (contains "Tên khách hàng" or "STT")
+  let headerIdx = -1;
+  let colMap = {};
+  for (let i = 0; i < Math.min(rows.length, 10); i++) {
+    const r = rows[i].map(c => String(c).toLowerCase().trim());
+    let found = false;
+    r.forEach((cell, ci) => {
+      if (cell.includes('tên') && cell.includes('khách')) { colMap.ten = ci; found = true; }
+      if (cell === 'stt' || cell.match(/^s\.?t\.?t\.?$/)) colMap.stt = ci;
+      if (cell.includes('ngày') || cell.includes('ngay')) colMap.ngay = ci;
+      if (cell.includes('lãi') && !cell.includes('gốc') && !cell.includes('tổng')) colMap.lai = ci;
+      if (cell.includes('gốc') || cell.includes('goc')) colMap.goc = ci;
+      if ((cell.includes('tổng') || cell.includes('tong')) && cell.includes('cộng')) colMap.tong = ci;
+    });
+    if (found) { headerIdx = i; break; }
+  }
+  if (headerIdx < 0) return null;
+
+  const data = [];
+  for (let i = headerIdx + 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (!r || r.every(c => c === '' || c === null)) continue;
+    const ten = String(r[colMap.ten] || '').trim();
+    if (!ten || ten.toLowerCase().includes('tổng') || ten.toLowerCase().includes('total')) continue;
+
+    const ngayRaw = r[colMap.ngay];
+    const ngayDate = parseDue(ngayRaw);
+    if (!ngayDate || isNaN(ngayDate)) continue;
+
+    const ngay = ngayDate.toISOString().split('T')[0]; // yyyy-mm-dd
+    const lai = parseFloat(String(r[colMap.lai] || '0').replace(/[^\d.]/g, '')) || 0;
+    const goc = colMap.goc !== undefined ? (parseFloat(String(r[colMap.goc] || '0').replace(/[^\d.]/g, '')) || 0) : 0;
+    const tong = colMap.tong !== undefined ? (parseFloat(String(r[colMap.tong] || '0').replace(/[^\d.]/g, '')) || 0) : lai + goc;
+    const stt = data.length + 1;
+    const loai = ten.toLowerCase().includes('công ty') || ten.toLowerCase().includes('ct ') ? 'Doanh nghiệp' : 'Cá nhân';
+    data.push({ stt, ten, loai, ngay, lai, goc, tong });
+  }
+
+  // Derive label from filename or first date
+  let label = '';
+  const fnMatch = filename.match(/[tT](\d{1,2})[_\-\s\.\/]?(\d{2,4})/);
+  if (fnMatch) {
+    label = `T${fnMatch[1]}/${fnMatch[2].length === 2 ? '20' + fnMatch[2] : fnMatch[2]}`;
+  } else if (data.length > 0) {
+    const d = parseDue(data[0].ngay);
+    label = `T${d.getMonth()+1}/${d.getFullYear()}`;
+  } else label = filename.replace(/\.[^.]+$/, '');
+
+  const id = label.replace(/\//g, '_') + '_' + Date.now();
+  return { id, label, data };
+}
+
+// ============================
+// PERIOD TABS
+// ============================
+function renderPeriodTabs() {
+  const wrap = document.getElementById('periodTabsWrap');
+  const tabs = document.getElementById('periodTabs');
+  if (allPeriods.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  tabs.innerHTML = allPeriods.map(p => `
+    <button class="period-tab ${p.id === activePeriodId ? 'active' : ''}" onclick="switchPeriod('${p.id}')">
+      ${p.label}
+      <span class="del-btn" onclick="deletePeriod(event,'${p.id}')">✕</span>
+    </button>`).join('');
+}
+
+function switchPeriod(id) {
+  activePeriodId = id;
+  localStorage.setItem('ttt_active', id);
+  renderPeriodTabs();
+  render();
+}
+
+function deletePeriod(e, id) {
+  e.stopPropagation();
+  if (!confirm('Xoá kỳ này? Dữ liệu sẽ mất cho tất cả mọi người.')) return;
+  allPeriods = allPeriods.filter(p => p.id !== id);
+  if (activePeriodId === id) {
+    activePeriodId = allPeriods[0]?.id || null;
+    localStorage.setItem('ttt_active', activePeriodId || '');
+  }
+  savePeriods();
+  renderPeriodTabs();
+  render();
+}
+
+// ============================
+// TOGGLE PAID — với modal chọn ngày thực tế
+// ============================
+function togglePaid(stt, pid) {
+  if (!paidMap[pid]) paidMap[pid] = {};
+  const cur = paidMap[pid][stt];
+  if (cur && cur.paid) {
+    // Bỏ đánh dấu: xoá luôn
+    paidMap[pid][stt] = { paid: false, note: '', paidDate: '' };
+    savePaid();
+    render();
+    return;
+  }
+  // Mở modal hỏi ngày đóng thực tế
+  const row = activePeriod()?.data?.find(r => r.stt === stt);
+  const dueDateStr = row?.ngay || '';
+  showPaidModal(stt, pid, row?.ten || '', dueDateStr);
+}
+
+function showPaidModal(stt, pid, tenKH, dueDateStr) {
+  // Default ngày đóng = hôm nay
+  const todayStr = new Date().toISOString().split('T')[0]; // yyyy-mm-dd for input[type=date]
+  const dueObj = parseDue(dueDateStr);
+  const dueFmt = dueObj ? dueObj.toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'}) : dueDateStr;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'paidModal';
+  overlay.innerHTML = `
+    <div class="modal-box">
+      <div class="modal-title">✅ Xác nhận thu lãi</div>
+      <div class="modal-sub"><strong style="color:var(--gold)">${tenKH}</strong><br>Ngày dự thu: <strong>${dueFmt}</strong></div>
+      <div class="modal-label">Ngày khách hàng đóng lãi thực tế</div>
+      <input type="date" class="modal-date-input" id="modalDateInput" value="${todayStr}" max="${todayStr}" />
+      <div class="modal-actions">
+        <button class="btn-modal btn-modal-cancel" onclick="closePaidModal()">Huỷ</button>
+        <button class="btn-modal btn-modal-confirm" onclick="confirmPaid(${stt},'${pid}','${dueDateStr}')">Xác nhận</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener('click', e => { if (e.target === overlay) closePaidModal(); });
+  setTimeout(() => document.getElementById('modalDateInput')?.focus(), 50);
+}
+
+function closePaidModal() {
+  document.getElementById('paidModal')?.remove();
+}
+
+function confirmPaid(stt, pid, dueDateStr) {
+  const inputVal = document.getElementById('modalDateInput')?.value;
+  if (!inputVal) return;
+
+  const actualDate = new Date(inputVal + 'T00:00:00');
+  const dueDate = parseDue(dueDateStr);
+
+  // So sánh ngày đóng thực tế vs ngày dự thu
+  const diffDays = Math.round((actualDate - dueDate) / 86400000);
+  let autoNote, paidDateFmt;
+  paidDateFmt = actualDate.toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'});
+
+  if (diffDays > 0) autoNote = `Trễ ${diffDays} ngày`;
+  else if (diffDays === 0) autoNote = 'Đúng hạn';
+  else autoNote = `Sớm ${Math.abs(diffDays)} ngày`;
+
+  if (!paidMap[pid]) paidMap[pid] = {};
+  paidMap[pid][stt] = { paid: true, note: autoNote, paidDate: paidDateFmt, actualDateStr: inputVal };
+  savePaid();
+  closePaidModal();
+  render();
+}
+
+function updateNote(stt, pid, val) {
+  if (!paidMap[pid]) paidMap[pid] = {};
+  if (!paidMap[pid][stt]) paidMap[pid][stt] = { paid: false, note: '', paidDate: '' };
+  paidMap[pid][stt].note = val;
+  savePaid();
+}
+
+// ============================
+// FILTER
+// ============================
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+// ============================
+// RENDER
+// ============================
+function render() {
+  // Date
+  const now = new Date();
+  document.getElementById('currentDate').textContent =
+    now.toLocaleDateString('vi-VN', { weekday:'long', day:'2-digit', month:'2-digit', year:'numeric' });
+  document.getElementById('lastUpdate').textContent = now.toLocaleTimeString('vi-VN');
+
+  const period = activePeriod();
+  document.getElementById('activePeriodTag').textContent = period ? period.label : 'Chưa có dữ liệu';
+
+  if (!period || !period.data.length) {
+    // Reset stats
+    ['totalLai','cntOverdue','cntWarn','cntPaid','cntUnpaid'].forEach(id => document.getElementById(id).textContent = '—');
+    document.getElementById('progressPct').textContent = '0%';
+    document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('tableBody').innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📁</div><div class="empty-text">Chưa có dữ liệu</div><div class="empty-sub">Import file Excel để bắt đầu</div></div></td></tr>`;
+    ['footerLai','footerGoc','footerTotal'].forEach(id => document.getElementById(id).textContent = '—');
+    return;
+  }
+
+  const pid = activePeriodId;
+  const data = period.data;
+  const pm = getPaid(pid);
+
+  // Stats
+  let nOver = 0, nWarn = 0, nPaid = 0, nUnpaid = 0;
+  let laiPaid = 0, laiUnpaid = 0;
+  data.forEach(r => {
+    const s = getStatus(r, pid);
+    if (s === 'overdue') nOver++;
+    else if (s === 'warning') nWarn++;
+    if (s === 'paid') { nPaid++; laiPaid += r.lai; }
+    else { nUnpaid++; laiUnpaid += r.lai; }
+  });
+
+  document.getElementById('totalLai').textContent = fmtShort(data.reduce((a,r) => a+r.lai, 0));
+  document.getElementById('totalKH').textContent = `${data.length} khách hàng`;
+  document.getElementById('cntOverdue').textContent = nOver;
+  document.getElementById('cntWarn').textContent = nWarn;
+  document.getElementById('cntPaid').textContent = nPaid;
+  document.getElementById('paidAmt').textContent = fmtShort(laiPaid);
+  document.getElementById('cntUnpaid').textContent = nUnpaid;
+  document.getElementById('unpaidAmt').textContent = fmtShort(laiUnpaid);
+
+  // Progress
+  const pct = data.length > 0 ? Math.round(nPaid / data.length * 100) : 0;
+  document.getElementById('progressPct').textContent = pct + '%';
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressLeft').textContent = `Đã thu: ${nPaid} khoản (${fmtShort(laiPaid)})`;
+  document.getElementById('progressRight').textContent = `Còn lại: ${nUnpaid} khoản (${fmtShort(laiUnpaid)})`;
+
+  // Alert
+  const alertEl = document.getElementById('alertBanner');
+  if (nOver > 0) {
+    alertEl.className = 'alert-banner overdue';
+    alertEl.innerHTML = `<div style="font-size:20px">⚠️</div><div><div class="alert-text" style="color:#f87171">Có ${nOver} khoản ĐÃ QUÁ HẠN — liên hệ khách hàng ngay!</div><div class="alert-sub">${data.filter(r => getStatus(r,pid)==='overdue').map(r=>r.ten).join(', ')}</div></div>`;
+  } else if (nWarn > 0) {
+    alertEl.className = 'alert-banner warn';
+    alertEl.innerHTML = `<div style="font-size:20px">🔔</div><div><div class="alert-text" style="color:#fbbf24">Có ${nWarn} khoản sẽ đến hạn trong 7 ngày tới</div><div class="alert-sub">${data.filter(r => getStatus(r,pid)==='warning').map(r => r.ten + ' (' + daysLeft(r.ngay) + ' ngày)').join(' · ')}</div></div>`;
+  } else {
+    alertEl.className = 'hidden';
+  }
+
+  // Filter data
+  const filtered = data.filter(r => {
+    const s = getStatus(r, pid);
+    if (currentFilter === 'all') return true;
+    if (currentFilter === 'unpaid') return s !== 'paid';
+    return s === currentFilter;
+  });
+
+  // Table
+  const tbody = document.getElementById('tableBody');
+  let sumLai = 0, sumGoc = 0, sumTong = 0;
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">Không có kết quả</div><div class="empty-sub">Thử bộ lọc khác</div></div></td></tr>`;
+  } else {
+    tbody.innerHTML = filtered.map(r => {
+      const status = getStatus(r, pid);
+      const d = daysLeft(r.ngay);
+      const isPaid = status === 'paid';
+      const pInfo = pm[r.stt] || {};
+      const note = pInfo.note || '';
+      const paidDate = pInfo.paidDate || '';
+
+      sumLai += r.lai; sumGoc += r.goc; sumTong += r.tong;
+
+      // Days chip
+      let daysHtml;
+      if (isPaid) daysHtml = `<span class="days-chip d-ok">✓ Xong</span>`;
+      else if (d < 0) daysHtml = `<span class="days-chip d-neg">Trễ ${Math.abs(d)}N</span>`;
+      else if (d === 0) daysHtml = `<span class="days-chip d-today">Hôm nay!</span>`;
+      else if (d <= 7) daysHtml = `<span class="days-chip d-warn">Còn ${d} ngày</span>`;
+      else daysHtml = `<span class="days-chip d-far">Còn ${d}N</span>`;
+
+      // Badge
+      let badgeHtml;
+      if (isPaid) badgeHtml = `<span class="badge badge-paid"><span class="badge-dot"></span>Đã thu</span>`;
+      else if (d < 0) badgeHtml = `<span class="badge badge-overdue"><span class="badge-dot"></span>Quá hạn</span>`;
+      else if (d <= 7) badgeHtml = `<span class="badge badge-warning"><span class="badge-dot"></span>Sắp đến hạn</span>`;
+      else badgeHtml = `<span class="badge badge-upcoming"><span class="badge-dot"></span>Chưa đến hạn</span>`;
+
+      // Note area — dùng autoNote đã lưu từ modal (so ngày đóng thực tế vs dự thu)
+      let noteHtml = '';
+      if (isPaid) {
+        const storedNote = pInfo.note || '';
+        const isLate = storedNote.startsWith('Trễ');
+        const isEarly = storedNote.startsWith('Sớm');
+        if (isLate) noteHtml += `<span class="note-tag note-late">${storedNote}</span>`;
+        else noteHtml += `<span class="note-tag note-ontime">${storedNote || 'Đúng hạn'}</span>`;
+        if (paidDate) noteHtml += `<br><span style="font-size:10px;color:var(--text-dim)">Đóng: ${paidDate}</span>`;
+      } else {
+        noteHtml += `<span class="note-tag note-pending">Chưa thu</span>`;
+      }
+      noteHtml += `<br><input class="note-input" placeholder="Ghi chú thêm..." value="${(isPaid ? '' : note).replace(/"/g,'&quot;')}" onchange="updateNote(${r.stt},'${pid}',this.value)" onclick="event.stopPropagation()" />`;
+
+      const dateObj = parseDue(r.ngay);
+      const dateFmt = dateObj ? dateObj.toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit',year:'numeric'}) : '—';
+      let dateColor = isPaid ? 'var(--text-dim)' : (d < 0 ? 'var(--red)' : d <= 7 ? 'var(--yellow)' : 'var(--text-mid)');
+
+      return `<tr class="${isPaid ? 'is-paid' : ''} ${d < 0 && !isPaid ? 'row-overdue' : ''}" data-stt="${r.stt}">
+        <td><span class="stt">${r.stt}</span></td>
+        <td><div class="cust-name">${r.ten}</div><div class="cust-type">${r.loai}</div></td>
+        <td class="c"><span class="date-cell" style="color:${dateColor}">${dateFmt}</span></td>
+        <td class="c">${daysHtml}</td>
+        <td class="r"><span class="amt">${fmt(r.lai)}</span></td>
+        <td class="r"><span class="amt-goc">${r.goc > 0 ? fmt(r.goc) : '—'}</span></td>
+        <td class="r"><span class="amt-total">${fmt(r.tong)}</span></td>
+        <td class="c">${badgeHtml}</td>
+        <td class="c" style="min-width:130px">${noteHtml}</td>
+        <td class="c">
+          <div class="paid-toggle ${isPaid ? 'on' : ''}" onclick="togglePaid(${r.stt},'${pid}')" title="${isPaid ? 'Bỏ đánh dấu' : 'Đánh dấu đã thu'}"></div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  document.getElementById('footerLai').textContent = fmt(sumLai);
+  document.getElementById('footerGoc').textContent = sumGoc > 0 ? fmt(sumGoc) : '—';
+  document.getElementById('footerTotal').textContent = fmt(sumTong);
+  document.getElementById('recordCount').textContent = `${filtered.length} / ${data.length} khoản`;
+}
+
+// ============================
+// NOTIFICATIONS
+// ============================
+function checkNotifications() {
+  if (!("Notification" in window) || Notification.permission === 'denied') return;
+  if (Notification.permission === 'default') { Notification.requestPermission(); return; }
+  const period = activePeriod();
+  if (!period) return;
+  const pid = activePeriodId;
+  const overdues = period.data.filter(r => getStatus(r, pid) === 'overdue');
+  const warnings = period.data.filter(r => getStatus(r, pid) === 'warning');
+  if (overdues.length > 0) {
+    new Notification('⚠️ TTT INVEST — Quá hạn!', {
+      body: overdues.map(r => `• ${r.ten}: ${fmtShort(r.lai)}`).join('\n'),
+    });
+  } else if (warnings.length > 0) {
+    new Notification('🔔 TTT INVEST — Nhắc thu lãi', {
+      body: warnings.map(r => `• ${r.ten}: còn ${daysLeft(r.ngay)} ngày`).join('\n'),
+    });
+  }
+}
+
+// ============================
+// SEED DATA T6/2026
+// ============================
+function seedDefaultData() {
+  if (allPeriods.length > 0) return;
+  const seed = {
+    id: 'T6_2026_default',
+    label: 'T6/2026',
+    data: [
+      {stt:1, ten:"CÔNG TY CP PT BĐS PHÁT ĐẠT", loai:"Doanh nghiệp", ngay:"2026-06-03", lai:2878082192, goc:80000000000, tong:82878082192},
+      {stt:2, ten:"VŨ QUỲNH HOA",               loai:"Cá nhân",      ngay:"2026-06-12", lai:131354827,  goc:0,           tong:131354827},
+      {stt:3, ten:"VÕ XUÂN PHONG",              loai:"Cá nhân",      ngay:"2026-06-23", lai:141780822,  goc:0,           tong:141780822},
+      {stt:4, ten:"ĐẶNG QUỐC LỊCH",             loai:"Cá nhân",      ngay:"2026-06-30", lai:491506849,  goc:0,           tong:491506849},
+      {stt:5, ten:"ĐÀO NGUYÊN ANH",             loai:"Cá nhân",      ngay:"2026-06-30", lai:4520550,    goc:0,           tong:4520550},
+      {stt:6, ten:"NGUYỄN VĂN CƯƠNG",           loai:"Cá nhân",      ngay:"2026-06-30", lai:123287671,  goc:0,           tong:123287671},
+      {stt:7, ten:"NGUYỄN THỊ HẰNG",            loai:"Cá nhân",      ngay:"2026-06-30", lai:110958904,  goc:0,           tong:110958904},
+      {stt:8, ten:"PHẠM HOÀNG PHONG",           loai:"Cá nhân",      ngay:"2026-06-30", lai:60410960,   goc:0,           tong:60410960},
+      {stt:9, ten:"TRƯƠNG TẤN QUÂN",            loai:"Cá nhân",      ngay:"2026-06-30", lai:82191781,   goc:0,           tong:82191781},
+      {stt:10,ten:"LÊ QUỐC VIỆT",               loai:"Cá nhân",      ngay:"2026-06-30", lai:17178082,   goc:0,           tong:17178082},
+      {stt:11,ten:"TRẦN THỊ NGỌC LIÊN",         loai:"Cá nhân",      ngay:"2026-06-30", lai:115068493,  goc:0,           tong:115068493},
+      {stt:12,ten:"NGUYỄN VIỆT CƯỜNG",          loai:"Cá nhân",      ngay:"2026-06-30", lai:115068493,  goc:0,           tong:115068493},
+      {stt:13,ten:"CÔNG TY AT&T",               loai:"Doanh nghiệp", ngay:"2026-06-30", lai:76290411,   goc:0,           tong:76290411},
+      {stt:14,ten:"CÔNG TY CHÂU ĐẠI DƯƠNG",     loai:"Doanh nghiệp", ngay:"2026-06-30", lai:120246575,  goc:0,           tong:120246575},
+    ]
+  };
+  allPeriods = [seed];
+  activePeriodId = seed.id;
+  localStorage.setItem('ttt_active', activePeriodId);
+  await savePeriods(); // push seed lên server nếu server trống
+}
+
+// ============================
+// INIT
+// ============================
+async function init() {
+  setupDropZone();
+  render(); // render skeleton ngay
+  await loadFromServer(); // load dữ liệu từ server
+  if (allPeriods.length === 0) await seedDefaultData();
+  if (!activePeriodId && allPeriods.length > 0) activePeriodId = allPeriods[0].id;
+  renderPeriodTabs();
+  render();
+  checkNotifications();
+  setInterval(checkNotifications, 3600000);
+}
+init();
+</script>
+</body>
+</html>
